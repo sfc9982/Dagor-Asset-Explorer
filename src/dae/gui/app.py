@@ -8,7 +8,7 @@ import util.log as log
 import gc
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import pyqtSignal, QDir, QFileInfo, QDirIterator, QRunnable, QThreadPool, QObject
-from PyQt5.QtWidgets import QMainWindow, QGridLayout, QAction, QFileDialog, QApplication
+from PyQt5.QtWidgets import QMainWindow, QGridLayout, QHBoxLayout, QAction, QFileDialog, QApplication, QFrame
 from PyQt5.QtGui import QIcon, QStandardItem
 from gui.customtreeview import CustomTreeView, AssetItem, FolderItem, SimpleItem
 from gui.progressDialog import ProgressDialog, BusyProgressDialog, MessageBox
@@ -26,6 +26,9 @@ from util.terminable import Exportable, Pack, Terminable
 from gui.settingsDialog import SettingsDialog
 from functools import partial
 from traceback import format_exc
+
+from vedo import Plotter, Mesh
+from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor		
 
 # LOADINGGIF_SIZE = QSize(150, 150)
 
@@ -76,6 +79,7 @@ class MainWindow(QMainWindow):
 	itemsCreated = pyqtSignal()
 
 	gridLayout:QGridLayout
+	horizontalLayout:QHBoxLayout
 	treeView:CustomTreeView
 
 	actionOpenFolder:QAction
@@ -97,6 +101,7 @@ class MainWindow(QMainWindow):
 		self.gridLayout.setContentsMargins(-1, -1, -1, -1)
 		
 		self.treeView.initModel(self.lineEdit)
+		# self.previewDialog.show()
 
 		self.clearItems:list[function] = []
 
@@ -121,6 +126,11 @@ class MainWindow(QMainWindow):
 
 		self.mapTab.mainWindow = self
 		
+		self.frame = QFrame()
+		self.vtkWidget = QVTKRenderWindowInteractor(self.frame)
+		self.horizontalLayout.addWidget(self.vtkWidget)
+		self.vedoPlotter = Plotter(qt_widget=self.vtkWidget)
+		self.vedoPlotter.background("#5f9ea0")
 		self.show()
 
 	def openSettings(self):
@@ -360,6 +370,8 @@ class MainWindow(QMainWindow):
 		
 		self.setRequestedDialog(DIALOG_NONE)
 
+	def getVedoPlotter(self):
+		return self.vedoPlotter
 
 
 

@@ -22,6 +22,7 @@ from util.settings import SETTINGS
 from subprocess import Popen
 from glob import glob
 
+from vedo import Mesh
 
 FOLDER_ICO_PATH = getResPath("folder.bmp")
 VTFCMD_PATH = path.join(LIB_FOLDER, "VTFcmd.exe")
@@ -80,7 +81,7 @@ class SimpleItem:
 				level = log.curLevel
 
 				try:
-					# menu.addAction(PreviewModel(menu, self, 0))
+					menu.addAction(PreviewModel(menu, self, 0))
 
 					if isinstance(asset, GeomNodeTree):
 						menu.addAction(ExportSkeletonToDMF(menu, self, 0))
@@ -534,7 +535,7 @@ class PreviewModel(CustomAction):
 
 	@property
 	def actionText(self) -> str:
-		return f"Preview LOD {self.lod}"
+		return f"Preview"
 	
 	@property
 	def taskTitle(self) -> str:
@@ -551,8 +552,18 @@ class PreviewModel(CustomAction):
 
 	def run(self):
 		asset:RendInst = self.item.asset
-
-		# PreviewDialog(self.mainWindow, asset.getObj(self.lod)).show()
+		mainWindow = self.mainWindow
+		maxLod = max(asset.lodCount - 3, 0) # Avoid getting the highest LOD which stalls the main thread
+		
+		tmpFilename = "preview.obj"
+		with open(tmpFilename, "w") as file:
+			previewObj = asset.getModel(maxLod).getOBJ()
+			file.write(previewObj)
+		
+		vedoPlotter = mainWindow.getVedoPlotter()
+		vedoPlotter.clear()
+		vedoPlotter.add(Mesh(tmpFilename, c="#e6e6e6"))
+		vedoPlotter.show()
 
 
 
